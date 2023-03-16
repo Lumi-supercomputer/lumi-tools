@@ -1,0 +1,28 @@
+.\" Developed by the LUMI User Support Team  for the LUMI consortium.
+.TH man 1 "17 February 2023" "0.1.1" "lumi-allocations"
+
+.SH NAME
+lumi-allocations \- Shows active allocations for all active projects of the current user,
+or a slected project..
+
+.SH DESCRIPTION
+\fBlumi-allocations\fR is a tool that shows remaining billing units either for all projects
+of the active user or for a given project. This information is not instantaneous but is
+gathered in the background on the system on a periodic basis and extracted directly 
+from the same system that also passes the data to the various account management platforms
+connected to LUMI.
+
+.SH OPTIONS
+.TP 
+\fB-h\fR, \fB--help\fR
+Show a help message and exit.
+.TP
+\fB-p\fR, \fB--project\fR
+Show only output for the given projects, given as a comma-separated list. The default is
+to show information for all active projects of the active user.
+
+.SH SEE ALSO
+lumi-workspaces(1), lumi-quota(1)
+
+.SH AUTHOR
+Developed by the LUMI User Support Team for the LUMI consortium
