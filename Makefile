@@ -2,7 +2,8 @@ VERSION=1.0.1
 DATE="16 March 2023"
 PREFIX=/user/local
 
-recommended : select-workspaces-sh select-quota-sh man-allocations-py
+recommended : check-build-dirs select-workspaces-sh select-quota-sh man-allocations-py
+	m4 -DVERSION=$(VERSIUON) -DDATE=$(DATE) man/man1/lumi-tools-recommended.1 >build/share/man/man1/lumi-tools.1
 
 check-build-dirs :
 	mkdir -p build/bin
