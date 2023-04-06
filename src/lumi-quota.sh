@@ -126,10 +126,10 @@ function print_projects() {
         print_quota projappl ${grp}
         print_quota scratch ${grp}
         #echo "DEBUG Looking at flash for ${grp}"
-        #if [[ -d "/flash/${grp}" ]]; then
-        #     print_quota flash ${grp}
-        #fi
-        print_quota2 flash /pfs/lustref1 ${grp}
+        if [[ -d "/flash/${grp}" ]]; then
+             print_quota flash ${grp}
+        fi
+        #print_quota2 flash /pfs/lustref1 ${grp}
         #echo "DEBUG End looking at flash for ${grp}"
     done
 }
