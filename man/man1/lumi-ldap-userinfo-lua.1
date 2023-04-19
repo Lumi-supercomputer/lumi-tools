@@ -1,0 +1,44 @@
+.\" Developed by the LUMI User Support Team  for the LUMI consortium.
+.TH man 1 "DATE" "VERSION" "lumi-ldap-userinfo"
+
+.SH NAME
+\fBlumi-ldap-userinfo\fR \- Show information about users kept in
+the LDAP directory, including quota.
+
+.SH DESCRIPTION
+\fBlumi-allocations\fR shows information about projects as it is kept in the 
+LDAP system. The amount of information that is shown depends on your privileges
+on the system as regular users can only see data from themselves. 
+The information includes information about the quota. That is not live information but
+computed periodically. The tool also shows a list of projects 
+found on the system (in the group database) for the given user(s).
+
+This tool shows more information than \fBlumi-quota\fR or
+\fBlumi-workspaces\fR. However, \fBlumi-quota\fR and \fBlumi-workspaces\fR show quota
+information almost in real time. It is complementary to the
+\fBlumi-ldap-projectinfo\fR tool that shows project information from the LDAP.
+
+.SH OPTIONS
+
+Without arguments \fBlumi-ldap-userinfo\fR will show information about the 
+current user.
+
+.TP 
+\fB-h\fR, \fB--help\fR
+Show a help message and exit.
+.TP
+\fB-u\fR, \fB--user\fR
+Show information about the given user or users (comma-separated list).
+This assumes that you have sufficient privileges on the system to see information
+for those users which in practice makes this option only useful for support persons.
+
+.PP
+Arguments not preceded by any of these options will be treated as additional users
+to add to the list of userss to display. It is also possible to specify multiple
+\fB-u\fR options. However, due to the nature of the output this may not be very practical.
+
+.SH SEE ALSO
+lumi-allocations(1), lumi-quota(1), lumi-workspaces(1), lumi-ldap-projectinfo(1)
+
+.SH AUTHOR
+Developed by the LUMI User Support Team for the LUMI consortium

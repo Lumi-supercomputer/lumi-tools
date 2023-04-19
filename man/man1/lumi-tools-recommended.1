@@ -1,5 +1,5 @@
 .\" Developed by the LUMI User Support Team  for the LUMI consortium.
-.TH man 1 "17 February 2023" "0.1.1" "lumi-tools-overview"
+.TH man 1 "DATE" "VERSION"  "lumi-tools-overview"
 
 .SH NAME
 \fBlumi-tools\fR \- Module bundling various tools that users can use to get information
@@ -24,9 +24,20 @@ for a given project.
 \fBlumi-check-quota\fR
 Command to show warnings when running out of quota or allocations, similar to the 
 warnings shown at login.
+.TP
+\fBlumi-ldap-projectinfo\fR
+Shows information about projects, including the last stored state of the allocations
+and the quota. It does show more information than \fBlumi-workspaces\fR but less live
+information. What you can see also depends on your privileges on the system.
+.TP
+\fBlumi-ldap-userinfo\fR
+Shows information about users, including the last stored state of the quota. 
+It does show more information than \fBlumi-workspaces\fR but less live
+information. What you can see also depends on your privileges on the system.
 
 .SH SEE ALSO
-lumi-workspaces(1), lumi-quota(1), lummi-allocations(1), lumi-check-quota(1)
+lumi-workspaces(1), lumi-quota(1), lummi-allocations(1), lumi-check-quota(1),
+lumi-ldap-projectinfo(1), lumi-ldap-userinfo(1)
 
 .SH AUTHOR
 Developed by the LUMI User Support Team for the LUMI consortium
