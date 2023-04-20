@@ -372,8 +372,8 @@ end  -- function get_project_title
 
 function colour_thresholds( value )
 
-    local threshold_red =    90
-    local threshold_orange = 80
+    local threshold_red =    90.0
+    local threshold_orange = 80.0
     
     if value >= threshold_red then 
         return string.char(27) .. '[31m', string.char(27) .. '[0m'
@@ -676,7 +676,7 @@ do
         block_perc_used = 100 * quota['block_used'] / quota['block_soft']
 	    inode_perc_used = 100 * quota['inode_used'] / quota['inode_soft']
 	    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-	    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+	    local inode_colour_on, inode_colour_off = colour_thresholds( inode_perc_used )
 	    
 	    print( '    - block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
 	           '% used (' .. convert_to_iec( quota['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['block_soft'] * 1024, 5 ) .. 
@@ -684,7 +684,7 @@ do
 	           ',\n' ..  
 	           '    - file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
 	           '% used (' .. convert_to_si( quota['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['inode_soft'], 5 ) .. 
-	           '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
+	           '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
 	        
     end
 

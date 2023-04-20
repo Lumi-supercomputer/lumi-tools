@@ -642,7 +642,7 @@ do
     -- Storage information
     --
     
-    if project_info['storage_quotas']['directories'] == nil or project_info['storage_quotas']['directories']['projappl']  == nil then
+    if project_info['storage_quotas']['directories'] == nil or project_info['storage_quotas']['directories']['projappl'] == nil then
         print( '- Project is no longer hosted on lumi.' )
     else
 	    local project_scratch_dir = lfs.symlinkattributes( '/scratch/' .. project, 'target' )
@@ -713,7 +713,7 @@ do
 		    block_perc_used = 100 * quota['project']['block_used'] / quota['project']['block_soft']
 		    inode_perc_used = 100 * quota['project']['inode_used'] / quota['project']['inode_soft']
 		    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+		    local inode_colour_on, inode_colour_off = colour_thresholds( inode_perc_used )
 		    
 		    print( '    - /project/' .. project .. ': ' ..
 		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
@@ -722,14 +722,14 @@ do
 		           ',\n                 ' .. spacer ..  
 		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
 		           '% used (' .. convert_to_si( quota['project']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['project']['inode_soft'], 5 ) .. 
-		           '  /' .. convert_to_si( quota['project']['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
+		           '  /' .. convert_to_si( quota['project']['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
 	    end
 	
 	    if quota['scratch']['has_dir'] then
 		    block_perc_used = 100 * quota['scratch']['block_used'] / quota['scratch']['block_soft']
 		    inode_perc_used = 100 * quota['scratch']['inode_used'] / quota['scratch']['inode_soft']
 		    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+		    local inode_colour_on, inode_colour_off = colour_thresholds( inode_perc_used )
 		    
 		    print( '    - /scratch/' .. project .. ': ' ..
 		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
@@ -738,14 +738,14 @@ do
 		           ',\n                 ' .. spacer ..  
 		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
 		           '% used (' .. convert_to_si( quota['scratch']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['scratch']['inode_soft'], 5 ) .. 
-		           '  /' .. convert_to_si( quota['scratch']['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
+		           '  /' .. convert_to_si( quota['scratch']['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
 	    end
 	
 	    if quota['flash']['has_dir'] then
 		    block_perc_used = 100 * quota['flash']['block_used'] / quota['flash']['block_soft']
 		    inode_perc_used = 100 * quota['flash']['inode_used'] / quota['flash']['inode_soft']
 		    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+		    local inode_colour_on, inode_colour_off = colour_thresholds( inode_perc_used )
 		    
 		    print( '    - /flash/' .. project .. ':   ' ..
 		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
@@ -754,7 +754,7 @@ do
 		           ',\n                 ' .. spacer ..  
 		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
 		           '% used (' .. convert_to_si( quota['flash']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['flash']['inode_soft'], 5 ) .. 
-		           '  /' .. convert_to_si( quota['flash']['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
+		           '  /' .. convert_to_si( quota['flash']['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
 	    end
     
     end
