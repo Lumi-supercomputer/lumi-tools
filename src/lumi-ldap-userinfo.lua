@@ -372,8 +372,8 @@ end  -- function get_project_title
 
 function colour_thresholds( value )
 
-    local threshold_red =    90.0
-    local threshold_orange = 80.0
+    local threshold_red =    100.0
+    local threshold_orange = 90.0
     
     if value >= threshold_red then 
         return string.char(27) .. '[31m', string.char(27) .. '[0m'
