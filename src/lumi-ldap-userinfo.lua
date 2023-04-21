@@ -687,6 +687,48 @@ do
 	           '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
 	        
     end
+    
+    --
+    -- Print key information (if sufficient privileges)
+    --
+    
+    local fh = io.open( '/project/project_462000008/ldaplog/sshkey_fingerprints.txt', 'r' )
+    
+    if fh ~= nil then
+    
+        -- Read the file at once (though I don't knw if this is more efficient than
+        -- using lines() to process line by line)
+    	local key_info_str = fh:read( '*all' )
+        fh:close()
+        
+        local keys = {}
+        local key
+        
+        for line in key_info_str:gmatch("([^\n]*)\n?") do
+        
+            local pos, key
+            pos, _, key = string.find( line, '^' .. user .. '%.pub: (.*)' )
+            
+            if pos == 1 then table.insert( keys, key ) end
+                  
+        end
+        
+        local keys_timestamp = lfs.attributes( '/project/project_462000008/ldaplog/sshkey_fingerprints.txt', 'modification' )
+        
+        if #keys == 0 then
+        
+            print( '- No keys found for this account (key data from ' .. os.date( '%c', keys_timestamp ) .. ')' )
+            
+        else   
+            
+            print( '- Keys found on the system for this account (key data from ' .. os.date( '%c', keys_timestamp ) .. '):' )
+            for _, key in ipairs( keys ) do
+                print( '  - ' .. key )
+            end
+            
+        end
+    
+    end -- if fh = nil, processing key data.
 
     
     --
