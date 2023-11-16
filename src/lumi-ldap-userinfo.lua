@@ -580,10 +580,12 @@ do
     local user_file = user_path .. '/lust/' .. user_postfix
     -- print( 'Attempting to read information from ' .. user_file )
     local fh = io.open( user_file, 'r' )
+    local lust_mode = true
     if fh == nil then
         user_file = user_path .. '/users/' .. user_postfix
         -- print( 'Now attempting to read information from ' user_file )
         fh = io.open( user_file, 'r' )
+        lust_mode = false
     end
     if fh == nil then 
         io.stderr:write( 'ERROR: You may not have sufficient rights to get information from user ' .. user .. 
@@ -616,6 +618,20 @@ do
     --
     print( '- General information:' )
     print( '  - GECOS: ' .. (user_info['gecos'] or 'UNKNOWN') )
+
+    local gid = (user_info['gid'] or '000000000')
+    if string.find(gid, '327%d%d%d%d%d%d' ) then
+        print( '  - Account is a Puhuri account, key management through MyAccessID (mms.MyAccessID.org).' )
+    elseif string.find(gid, '10%d%d%d%d%d%d' ) then
+        print( '  - Account is a CSC account, key management through MyCSC (my.csc.fi).' )
+    elseif string.find(gid, '80%d%d%d%d%d' ) then
+        print( '  - Account is a CSC account, key management through MyCSC (my.csc.fi).' )
+    elseif lust_mode then
+        print( ' - REMARK: Could not determine the account type.' )
+    end
+
+
+    print( '  - Uid/gid: ' .. (user_info['uid'] or 'UNKNOWN') .. '/' .. (user_info['gid'] or 'UNKNOWN') )
     
     if user_info['is_active']  ~=  nil then
 	    if user_info['is_active'] then
@@ -678,11 +694,11 @@ do
 	    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
 	    local inode_colour_on, inode_colour_off = colour_thresholds( inode_perc_used )
 	    
-	    print( '    - block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
+	    print( '    - Block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
 	           '% used (' .. convert_to_iec( quota['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['block_soft'] * 1024, 5 ) .. 
 	           '/' .. convert_to_iec( quota['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
 	           ',\n' ..  
-	           '    - file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
+	           '    - File quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
 	           '% used (' .. convert_to_si( quota['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['inode_soft'], 5 ) .. 
 	           '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
 	        
