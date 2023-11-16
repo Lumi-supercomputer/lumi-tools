@@ -779,8 +779,11 @@ do
 	        local alloc = project_info['billing']['cpu_hours']['alloc']
 	        local used = project_info['billing']['cpu_hours']['used']
 	        local perc_used = 100 * used / alloc
+            local k_alloc = alloc / 1000
+            local alloc_format
+            if ( k_alloc == math.floor( k_alloc ) ) then alloc_format='%.0f' else alloc_format='%.3f' end
 	        local colour_on, colour_off = colour_thresholds( perc_used )
-	        print( '  - CPU Khours:      ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
+	        print( '  - CPU Khours:      ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. string.format( '%.3f', used / 1000 ) .. ' of ' .. string.format( alloc_format, k_alloc ) .. ')' .. colour_off )
 	    else
 	        print( '  - No CPU hours allocated' )
 	    end
