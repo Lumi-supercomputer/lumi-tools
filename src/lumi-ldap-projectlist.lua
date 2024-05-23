@@ -12,6 +12,21 @@ local lfs = require('lfs')
 
 function json_decode( str )
 
+	local escape_char_map = {
+	    [ "\\" ] = "\\",
+	    [ "\"" ] = "\"",
+	    [ "\b" ] = "b",
+	    [ "\f" ] = "f",
+	    [ "\n" ] = "n",
+	    [ "\r" ] = "r",
+	    [ "\t" ] = "t",
+	}
+	
+	local escape_char_map_inv = { [ "/" ] = "/" }
+	for k, v in pairs(escape_char_map) do
+	    escape_char_map_inv[v] = k
+	end
+
     local parse
 
     local function create_set(...)
@@ -299,255 +314,6 @@ end
 
 -- -----------------------------------------------------------------------------
 --
--- Function to clean up json code with problems that we have observed.
---
--- -----------------------------------------------------------------------------
-
-function cleanup_json( json_in )
-
-    -- Helper function from https://stackoverflow.com/questions/7983574/how-to-write-a-unicode-symbol-in-lua
-    function utf8Char (decimal)
-        if decimal < 128 then 
-            return string.char(decimal)
-        elseif decimal < 2048 then 
-            local byte2 = (128 + (decimal % 64))
-            local byte1 = (192 + math.floor(decimal / 64))
-            return string.char(byte1, byte2)
-        elseif decimal < 65536 then 
-            local byte3 = (128 + (decimal % 64))
-            decimal = math.floor(decimal / 64)
-            local byte2 = (128 + (decimal % 64))
-            local byte1 = (224 + math.floor(decimal / 64))
-            return string.char(byte1, byte2, byte3)
-        elseif decimal < 1114112 then
-            local byte4 = (128 + (decimal % 64))
-            decimal = math.floor(decimal / 64)
-            local byte3 = (128 + (decimal % 64))
-            decimal = math.floor(decimal / 64)
-            local byte2 = (128 + (decimal % 64))
-            local byte1 = (240 + math.floor(decimal / 64))
-            return string.char(byte1, byte2, byte3, byte4)
-        else
-            return nil  -- Invalid Unicode code point
-        end
-    end
-
-	local json_out = json_in
-
-    -- Found a \" which is likely confusing in project_465000200 title.
-    json_out = string.gsub( json_out, '\\"', '' )
-
-    -- Search for UNICODE patterns '\\u%x%x%x%x' and convert to a character.
-    local first, last = string.find( json_out, '\\u%x%x%x%x' )
-    while first do 
-    
-        local charnum = tonumber( 'ox' .. string.sub( json_out, first+2, last ) )
-        json_out = string.gsub( json_out, string.sub( json_out, first, last ), utf8Char( charnum ) )
-        
-        first, last = string.find( json_out, '\\u%x%x%x%x' )
-    
-    end
-    
-    return json_out
-
-
-end  -- function cleanup_json
-
-
-
--- -----------------------------------------------------------------------------
---
--- Function to create a table with names for each userid
---
--- -----------------------------------------------------------------------------
-
-function get_user_table()
-
-	cmd = '/usr/bin/getent passwd'
-	
-	local user_table = {}
-	
-	fh = io.popen( cmd, 'r' )
-	for line in fh:lines() do
-	    local userid, name
-	    _, _, userid, name = line:find( '([^:]*):[^:]*:[^*]*:[^:]*:([^:]*):[^:]*:[^:]*' )
-	    user_table[userid] = name
-	end
-	fh:close()
-
-    
-    return user_table
-
-
-end  -- function get_user_table
-
-
--- -----------------------------------------------------------------------------
---
--- Function to generate the escape codes for printing values that are compared
--- to thresholds. Two values are returned: The escape codes to turn the colour
--- on and off.
---
--- -----------------------------------------------------------------------------
-
-function colour_thresholds( value )
-
-    local threshold_red =    100.0
-    local threshold_orange = 90.0
-    
-    if value >= threshold_red then 
-        return string.char(27) .. '[31m', string.char(27) .. '[0m'
-    elseif value >= threshold_orange then 
-        return string.char(27) .. '[33m', string.char(27) .. '[0m'
-    else
-        return '', ''
-    end
-
-end
-
-
--- -----------------------------------------------------------------------------
---
--- Function to format numbers in a field of given width
---
--- -----------------------------------------------------------------------------
-
-function format_value( value, width )
-
-    if value == math.ceil( value ) then
-        local format_string = '%' .. width .. 'd'
-        value_str = string.format( format_string, value )
-    elseif value < 10 then
-        local field_post = width - 2
-        local field_pre = 1
-        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
-        value_str = string.format( format_string, value )
-    elseif value < 100 then
-        local field_post = width - 3
-        local field_pre = 2
-        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
-        value_str = string.format( format_string, value )
-    elseif value < 1000 then
-        local field_post = width - 4
-        local field_pre = 3
-        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
-        value_str = string.format( format_string, value )
-    else
-        local field_post = width - 5
-        local field_pre
-        if width == 5 then field_pre = width else field_pre = 4 end
-        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
-        value_str = string.format( format_string, value )
-    end    
-    
-    return value_str
-
-end
-
-
--- -----------------------------------------------------------------------------
---
--- Function to convert to KiB/MiB/GiB/TiB/PiB.
---
--- Pretty dirty code at the moment that could be made a lot shorter with
--- a loop and constant array, and the second part could be moved to a separate
--- function also as it is repeaded elsewhere.
---
--- -----------------------------------------------------------------------------
-
-function convert_to_iec( value, width )
-
-    -- Note we currently assue width >= 5.
-    -- The width parameter also does not include the width for the units.
-
-    local value_str
-    local unit_str
-
-    if value < 1024 then  
-        unit_str = 'B  '
-    else
-        value = value / 1024
-        if value < 1024 then
-            unit_str = 'KiB'
-        else
-            value = value / 1024
-            if value < 1024 then
-                unit_str = 'MiB'
-            else
-                value = value / 1024
-                if value < 1024 then
-                    unit_str = 'GiB'
-                else
-                    value = value / 1024
-                    if value < 1024 then
-                        unit_str = 'TiB'
-                    else
-                        value = value / 1024
-                        unit_str = 'PiB'
-                    end
-                end
-            end
-        end    
-    end
-
-
-    return format_value( value, width ) .. unit_str
-
-end
-
-
--- -----------------------------------------------------------------------------
---
--- Function to convert to SI: K, M, G, T, P
---
--- Pretty dirty code at the moment that could be made a lot shorter with
--- a loop and constant array, and the second part could be moved to a separate
--- function also as it is repeaded elsewhere.
---
--- -----------------------------------------------------------------------------
-
-function convert_to_si( value, width )
-
-    -- Note we currently assue width >= 5.
-    -- The width parameter also does not include the width for the units.
-
-    local value_str
-    local unit_str
-
-    if value < 1000 then  
-        unit_str = ' '
-    else
-        value = value / 1000
-        if value < 1000 then
-            unit_str = 'K'
-        else
-            value = value / 1000
-            if value < 1000 then
-                unit_str = 'M'
-            else
-                value = value / 1000
-                if value < 1000 then
-                    unit_str = 'G'
-                else
-                    value = value / 1000
-                    if value < 1000 then
-                        unit_str = 'T'
-                    else
-                        value = value / 1000
-                        unit_str = 'P'
-                    end
-                end
-            end
-        end    
-    end
-
-    return format_value( value, width ) .. unit_str
-
-end
-
-
--- -----------------------------------------------------------------------------
---
 -- Main code
 --
 
@@ -647,8 +413,6 @@ do
     fh:close()
     
     local project_info = json_decode( project_info_str )
-    
-    print( 'Decoding ' .. project_info_str )
     
     print( project .. ': ' .. (project_info['title'] or 'UNKNOWN') )
 
