@@ -12,6 +12,21 @@ local lfs = require('lfs')
 
 function json_decode( str )
 
+	local escape_char_map = {
+	    [ "\\" ] = "\\",
+	    [ "\"" ] = "\"",
+	    [ "\b" ] = "b",
+	    [ "\f" ] = "f",
+	    [ "\n" ] = "n",
+	    [ "\r" ] = "r",
+	    [ "\t" ] = "t",
+	}
+	
+	local escape_char_map_inv = { [ "/" ] = "/" }
+	for k, v in pairs(escape_char_map) do
+	    escape_char_map_inv[v] = k
+	end
+
     local parse
 
     local function create_set(...)
