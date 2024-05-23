@@ -297,6 +297,21 @@ function string:split(sep)
 
 -- -----------------------------------------------------------------------------
 --
+-- Helper function: Check if a node has the proper data
+--
+-- -----------------------------------------------------------------------------
+
+function check_ldap_info()
+
+    require( 'lfs' )
+    
+    return ( lfs.attributes( '/var/lib/project_info', 'mode' ) == 'directory' )
+
+ end
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Function to print help information.
 --
 -- -----------------------------------------------------------------------------
@@ -304,10 +319,9 @@ function string:split(sep)
 function print_help()
 
     print( 
-        '\nlumi-ldap-projectlist: List projects of a user or all projects (latter LUST only)\n\n' ..
+        '\nlumi-ldap-projectlist: List names of all projects (LUST only)\n\n' ..
         'Arguments:\n' ..
-        '  -h/--help: Show this help and quit\n' ..
-        '  -a/--all:  List all projects (LUST only)\n'
+        '  -h/--help: Show this help and quit\n'
     )
 
 end
@@ -316,6 +330,13 @@ end
 --
 -- Main code
 --
+
+if not check_ldap_info() then
+
+    io.stderr:write( 'Error: This node does not provide the LDAP information needed.\n\n' )
+    os.exit( 1 )
+
+end
 
 -- -----------------------------------------------------------------------------
 --
@@ -333,9 +354,6 @@ do
     if ( arg[argctr] == '-h' or arg[argctr] == '--help' ) then
         print_help()
         os.exit( 0 )
-    elseif ( arg[argctr] == '-a' or arg[argctr] == '--all' ) then
-        show_all = true
-        if debug then io.stderr:write( 'DEBUG: Found -a/--all argument.\n' ) end
     else
         io.stderr:write( 'Error: ' .. arg[argctr]  .. ' is an unrecognised argument.\n' )
         print_help()
@@ -353,23 +371,8 @@ local project_list = {}
 
 local cmd
 
-if show_all then
-
-    cmd = "/usr/bin/ls -1 /var/lib/project_info/lust |& " ..
-          "grep -v 'Permission denied'"
-
-else
-
-    -- No arguments so we use the projects of the current user.
-    
-    local user_executing = os.getenv( 'USER' )
-    
-    cmd = "/usr/bin/getent group | /usr/bin/grep project_ | " ..
-          "/usr/bin/sed -e 's/,/|/g' -e 's/:/|/g' -e 's/\\(.*\\)/\\1|/' | " ..
-          "/usr/bin/grep '|" .. user_executing .. "|' | " ..
-          "/usr/bin/cut -d'|' -f1"
-
-end
+local cmd = "/usr/bin/ls -1 /var/lib/project_info/lust |& " ..
+            "grep -v 'Permission denied'"
 
 fh = io.popen( cmd, 'r')
 for line in fh:lines() do 
@@ -377,6 +380,12 @@ for line in fh:lines() do
     if debug then io.stderr:write( 'DEBUG: Adding ' .. line .. ' to the project list.\n' ) end
 end
 fh:close()
+
+if ( #project_list == 0 ) then
+
+    io.stderr:write( 'No projects found. You may not have enough privileges to list all projects.\n\n' )
+
+end
 
 table.sort( project_list )
 
