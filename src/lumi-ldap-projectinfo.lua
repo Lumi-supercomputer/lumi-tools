@@ -535,7 +535,11 @@ do
     elseif ( arg[argctr] == '-p' or arg[argctr] == '--project' ) then
         argctr = argctr + 1
         for _, project in ipairs( arg[argctr]:split( ',' ) ) do
-            table.insert( project_list, project )
+            if string.match( project, '^46%d%d%d%d%d%d%d$' ) then
+                table.insert( project_list, 'project_' .. project )
+            else
+                table.insert( project_list, project )
+            end
         end
         if debug then io.stderr:write( 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' ) end
     elseif ( arg[argctr] == '-u' or arg[argctr] == '--user' ) then
@@ -547,7 +551,11 @@ do
     elseif arg[argctr]:sub(1, 1)  ~=  '-' then
         -- An argument that does not start with a dash: treat as a project list
         for _, project in ipairs( arg[argctr]:split( ',' ) ) do
-            table.insert( project_list, project )
+             if string.match( project, '^46%d%d%d%d%d%d%d$' ) then
+                table.insert( project_list, 'project_' .. project )
+            else
+                table.insert( project_list, project )
+            end
         end
         if debug then io.stderr:write( 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' ) end        
     else
