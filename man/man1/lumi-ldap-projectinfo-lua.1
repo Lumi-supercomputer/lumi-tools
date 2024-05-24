@@ -28,15 +28,17 @@ projects of the current user.
 Show a help message and exit.
 .TP
 \fB-p\fR, \fB--project\fR
-Show information about the given project or projects (comma-separated list)
+Show information about the given project or projects (comma-separated list).
+The \fIproject_46*\fR projects can also be specified with just the number (without \fIproject_\fR).
 .TP
 \fB-u\fR, \fB--user\fR
 Show information about all projects of the given user (assumes elevated privileges
-if this is another user)
+if this is another user).
 
 .PP
 Arguments not preceded by any of these options will be treated as additional projects
-to add to the list of projects to display. It is also possible to specify multiple
+to add to the list of projects to display. The \fIproject_46*\fR projects can also be specified 
+with just the number (without \fIproject_\fR). It is also possible to specify multiple
 \fB-p\fR or \fB-u\fR options. However, due to the nature of the output this may
 not be very practical.
 
