@@ -1,0 +1,33 @@
+.\" Developed by the LUMI User Support Team  for the LUMI consortium.
+.TH man 1 "DATE" "VERSION" "lumi-ldap-projectlist"
+
+.SH NAME
+\fBlumi-ldap-projectlist\fR \- List all projects of the current user or
+(for LUST only) all projects that have not yet been cleaned up.
+
+.SH DESCRIPTION
+\fBlumi-ldap-projectlist\fR lists projects on the system (LUMI project number
+and title on a single line per project). In the default
+mode, it only lists all projects of the current user, but LUST members
+can also use a command line flag to request a list of all projects
+currently on LUMI. The main purpose of this tool is for LUST members to
+be able to use \fBgrep\fR to try to find the project number given the
+titles, etc. that users sometimes give.
+
+.SH OPTIONS
+
+Without arguments \fBlumi-ldap-projectlist\fR will show information about the 
+projects of the current user.
+
+.TP 
+\fB-h\fR, \fB--help\fR
+Show a help message and exit.
+.TP
+\fB-a\fR, \fB--all\fR
+List all projects known on LUMI (LUST members only)
+
+.SH SEE ALSO
+lumi-ldap-projectinfo(1), lumi-allocations(1), lumi-quota(1), lumi-workspaces(1)
+
+.SH AUTHOR
+Developed by the LUMI User Support Team for the LUMI consortium
