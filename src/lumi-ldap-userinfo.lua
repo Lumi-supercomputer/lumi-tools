@@ -12,6 +12,21 @@ local lfs = require('lfs')
 
 function json_decode( str )
 
+	local escape_char_map = {
+	    [ "\\" ] = "\\",
+	    [ "\"" ] = "\"",
+	    [ "\b" ] = "b",
+	    [ "\f" ] = "f",
+	    [ "\n" ] = "n",
+	    [ "\r" ] = "r",
+	    [ "\t" ] = "t",
+	}
+	
+	local escape_char_map_inv = { [ "/" ] = "/" }
+	for k, v in pairs(escape_char_map) do
+	    escape_char_map_inv[v] = k
+	end
+
     local parse
 
     local function create_set(...)
@@ -282,6 +297,22 @@ function string:split(sep)
 
 -- -----------------------------------------------------------------------------
 --
+-- Helper function: Check if a node has the proper data
+--
+-- -----------------------------------------------------------------------------
+
+function check_ldap_info()
+
+    require( 'lfs' )
+    
+    return ( lfs.attributes( '/var/lib/project_info', 'mode' ) == 'directory' ) and
+           ( lfs.attributes( '/var/lib/user_info', 'mode' )    == 'directory' )
+
+ end
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Function to print help information.
 --
 -- -----------------------------------------------------------------------------
@@ -525,6 +556,18 @@ function convert_to_si( value, width )
 
 end
 
+
+-- -----------------------------------------------------------------------------
+--
+-- Main code
+--
+
+if not check_ldap_info() then
+
+    io.stderr:write( 'Error: This node does not provide the LDAP information needed.\n\n' )
+    os.exit( 1 )
+
+end
 
 -- -----------------------------------------------------------------------------
 --

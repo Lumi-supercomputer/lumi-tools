@@ -1,0 +1,29 @@
+.\" Developed by the LUMI User Support Team  for the LUMI consortium.
+.TH man 1 "DATE" "VERSION" "lumi-ldap-projectlist"
+
+.SH NAME
+\fBlumi-ldap-projectlist\fR \- List all projects known to LUMI: LUMI project 
+number and title.
+
+.SH DESCRIPTION
+\fBlumi-ldap-projectlist\fR lists all projects known to LUMI. For each project,
+it gives the LUMI project number and title. Its main purpose is to pipe the
+output to \fBgrep\fR to try to locate the LUMI project number based on the incomplete
+information that we usually get from users. The tool can only be used by members
+of the LUST project. Other users will get a warning that they have no access to
+the data.
+
+.SH OPTIONS
+
+Without arguments \fBlumi-ldap-projectlist\fR will show information about the 
+projects of the current user.
+
+.TP 
+\fB-h\fR, \fB--help\fR
+Show a help message and exit.
+
+.SH SEE ALSO
+lumi-ldap-projectinfo(1), lumi-allocations(1), lumi-quota(1), lumi-workspaces(1)
+
+.SH AUTHOR
+Developed by the LUMI User Support Team for the LUMI consortium
