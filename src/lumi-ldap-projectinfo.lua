@@ -335,6 +335,35 @@ end
 
 -- -----------------------------------------------------------------------------
 --
+-- Function to convert a zulu time string to a more readable format
+--
+-- -----------------------------------------------------------------------------
+
+function readablezulu( zulustring )
+
+    if ( zulustring == nil ) then
+        return nil
+    end
+
+    local months = {'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'}
+
+    local year, month, day, hour, min, sec
+
+    year, month, day, hour, min, sec = string.match( zulustring, '(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)(%d%d)Z' )
+
+    year  = tonumber( year )
+    month = tonumber( month )
+    day   = tonumber( day )
+    hour  = tonumber( hour )
+    min   = tonumber( min )
+
+    return string.format( '%2d %s %4d %02d:%02d UTC', day, months[month], year, hour, min )
+
+end -- function printzulu
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Function to get the list of projects of a userid.
 --
 -- -----------------------------------------------------------------------------
@@ -555,6 +584,19 @@ end
 -- Main code
 --
 
+-- -----------------------------------------------------------------------------
+--
+-- Some constants etc. used in the script
+--
+
+local red_on  = '\27[31m'
+local red_off = '\27[0m'
+
+-- -----------------------------------------------------------------------------
+--
+-- Test if the script is run on a suitable node
+--
+
 if not check_ldap_info() then
 
     io.stderr:write( 'Error: This node does not provide the LDAP information needed.\n\n' )
@@ -610,7 +652,7 @@ end
 
 if #arg == 0 then
 
-    -- No arguments so we use the projects of the current user.without
+    -- No arguments so we use the projects of the current user.
     
     local user_executing = os.getenv( 'USER' )
     
@@ -623,6 +665,7 @@ end
 
 local project_path = '/var/lib/project_info'
 local first = true
+local mode = 'user'
 
 for _,project in ipairs( project_list )
 do
@@ -639,6 +682,8 @@ do
         project_file = project_path .. '/users/' .. project_postfix
         -- print( 'Now attempting to read information from ' project_file )
         fh = io.open( project_file, 'r' )
+    else
+        mode = 'lust'
     end
     if fh == nil then 
         io.stderr:write( 'ERROR: You may not have sufficient rights to get information from project ' .. project .. 
@@ -671,22 +716,59 @@ do
     --
     print( '- General information:' )
     print( '  - Title: ' .. (project_info['title'] or 'UNKNOWN') )
+
+    if mode == 'lust' then
+
+        print( red_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') .. red_off )
+        print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') .. red_off )
+        print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
     
-    if project_info['valid_compute_project']  ~=  nil then
-	    if project_info['valid_compute_project'] then
-	        print( '  - Project is valid for compute' )
-	    else
-	        print( '  - Project is not valid for compute' )
-	    end
     end
-    
-    
-    if project_info['is_open']  ~=  nil then
-	    if project_info['is_open'] then
-	        print( '  - Project is open (field is_open true)' )
-	    else
-	        print( '  - Project is closed (field is_open false)' )
-	    end
+
+    if mode == 'lust' then
+
+        if project_info['valid_compute_project']  ~=  nil then
+            if project_info['valid_compute_project'] then
+                print( red_on .. '  - Project is valid for compute' .. red_off )
+            else
+                print( red_on .. '  - Project is not valid for compute' .. red_off )
+            end
+        end
+        
+        
+        if project_info['is_open']  ~=  nil then
+            if project_info['is_open'] then
+                print( red_on .. '  - Project is open (field is_open true)' .. red_off )
+            else
+                print( red_on .. '  - Project is closed (field is_open false)' .. red_off )
+            end
+        end
+
+    end
+
+    -- Allocator country (LUST-only)
+
+    if mode == 'lust' then
+
+        local country_table = {}
+        country_table['lumi-ju'] = 'EuroHPC-JU'
+        country_table['lumi-be'] = 'Belgium'
+        country_table['lumi-ch'] = 'Switzerland'
+        country_table['lumi-cz'] = 'Czech Republic'
+        country_table['lumi-dk'] = 'Denmark'
+        country_table['lumi-ee'] = 'Estonia'
+        country_table['lumi-fi'] = 'Finland'
+        country_table['lumi-is'] = 'Iceland'
+        country_table['lumi-nl'] = 'The Netherlands'
+        country_table['lumi-no'] = 'Norway'
+        country_table['lumi-pl'] = 'Poland'
+        country_table['lumi-se'] = 'Sweden'
+        country_table['lumi-training'] = 'LUMI training'
+        country_table['lumi-lust'] = 'LUMI Support Team'
+        country_table['lumi-lustt'] = 'LUMI Support Team Training'
+
+        print( red_on .. '  - Allocator country: ' .. (country_table[project_info['allocator_country']] or 'UNKNOWN') .. red_off )
+
     end
 
     --
@@ -897,6 +979,14 @@ do
         end
     
     end -- if project_info['members']  ~=  nil then
+
+    --
+    -- List a command to print the raw data.
+    -- 
+    
+    if mode == 'lust' then
+        print( red_on .. '- Raw JSON data: `jq . /var/lib/project_info/lust/' .. project .. '/'.. project .. '.json`' .. red_off )
+    end
 
     print( )
 
