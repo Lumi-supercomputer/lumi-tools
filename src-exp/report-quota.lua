@@ -39,6 +39,11 @@ function get_quota( type, name, id )
     local lfsquota = handle:read("*a")
     handle:close()
 
+    if string.find( lfsquota, 'errors happened' ) then
+        print( 'Failed to get the quota with ' .. cmd .. ', quitting.\n\n' )
+        os.exit( 2 )
+    end
+
     local values = {}
     for w in string.gmatch( lfsquota, '%S+' ) do
         table.insert( values, w )
