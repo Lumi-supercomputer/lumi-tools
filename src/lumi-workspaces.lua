@@ -611,6 +611,72 @@ end
 
 -- -----------------------------------------------------------------------------
 --
+-- Function to get the Lustre quota
+--
+-- Arguments:
+--   - First argument: 'user', 'project', 'scratch' or 'flash', the filesystem
+--     to request quota from.
+--   - Second argument: User name or project name
+--   - Third argument (if the first is user only): Numeric userid of the user
+--
+-- -----------------------------------------------------------------------------
+
+function get_quota( type, name, id )
+
+    local offsets = {
+        user =    1000000000,
+        project = 2000000000,
+        scratch = 3000000000,
+        flash =   3000000000,
+    }
+
+    local dir
+    local lfsid
+
+    if ( type == 'user' ) then
+
+        lfsid = tonumber( id ) + offsets['user']
+        dir = '/users/' .. name
+
+    elseif ( type == 'project' ) or ( type == 'scratch' ) or (type == 'flash') then
+
+        lfsid = tonumber( name:match('project_([%d]+)') ) + offsets[type]
+        
+        if ( type == 'project' ) then
+            dir = '/projappl/' .. name
+        else
+            dir = '/' .. type .. '/' .. name
+        end
+
+    else
+        -- Should not happen, the first argument is illegal.
+        return nil
+    end
+
+    local cmd = string.format( 'lfs quota -q -p %d %s', lfsid, dir )
+    -- print( cmd )
+    
+    local handle = io.popen( cmd, 'r')
+    local lfsquota = handle:read("*a")
+    handle:close()
+
+    if string.find( lfsquota, 'errors happened' ) then
+        return nil, nil, nil, nil, nil, nil
+    end
+
+    local values = {}
+    for w in string.gmatch( lfsquota, '%S+' ) do
+        table.insert( values, w )
+    end
+    
+    return tonumber( values[2] ), tonumber( values[3] ), tonumber( values[4] ), 
+           tonumber( values[6] ), tonumber( values[7] ), tonumber( values[8] )
+
+end -- function get_quota
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Main code
 --
 
@@ -700,15 +766,27 @@ print( '  - User hosted on ' .. ( user_fs or 'UNKNOWN' ) )
 -- TODO: Get the real quota for the user directory.
 
 -- Project directory
-quota = {}
-quota['block_used'] = user_info['home_quota']['block_quota_used']
-quota['block_soft'] = user_info['home_quota']['block_quota_soft']
-quota['block_hard'] = user_info['home_quota']['block_quota_hard']
-quota['inode_used'] = user_info['home_quota']['inode_quota_used']
-quota['inode_soft'] = user_info['home_quota']['inode_quota_soft']
-quota['inode_hard'] = user_info['home_quota']['inode_quota_hard']
+local live = true
+local quota = {}
+quota['block_used'], quota['block_soft'], quota['block_hard'],
+quota['inode_used'], quota['inode_soft'], quota['inode_hard'] =
+    get_quota( 'user', user, user_info['uid'] )
 
-print( '  - Disk quota home directory (cached info):' )
+if ( quota['block_used'] == nil ) then
+    quota['block_used'] = user_info['home_quota']['block_quota_used']
+    quota['block_soft'] = user_info['home_quota']['block_quota_soft']
+    quota['block_hard'] = user_info['home_quota']['block_quota_hard']
+    quota['inode_used'] = user_info['home_quota']['inode_quota_used']
+    quota['inode_soft'] = user_info['home_quota']['inode_quota_soft']
+    quota['inode_hard'] = user_info['home_quota']['inode_quota_hard']
+    live = false
+end
+
+if live then
+    print( '  - Disk quota home directory (live from `lfs quota`):' )
+else
+    print( '  - Disk quota home directory (cached info):' )
+end
 
 block_perc_used = 100 * quota['block_used'] / quota['block_soft']
 inode_perc_used = 100 * quota['inode_used'] / quota['inode_soft']
@@ -722,7 +800,7 @@ print( '    - Block quota: '  .. block_colour_on .. string.format( '%5.1f', bloc
         '    - File quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
         '% used (' .. convert_to_si( quota['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['inode_soft'], 5 ) .. 
         '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
-	        
+
 
 --
 -- List the projects
