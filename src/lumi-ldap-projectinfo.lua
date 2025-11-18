@@ -581,6 +581,34 @@ end
 
 -- -----------------------------------------------------------------------------
 --
+-- Function to convert Zulu time to UNIX EPOCH
+--
+-- The time string (argument to zulu_to_epoch) is in the format used in the
+-- CSC data files: '!%Y%m%d%H%M%SZ'
+--
+-- -----------------------------------------------------------------------------
+
+function zulu_to_epoch(zulu)
+
+    -- Parse Zulu string
+    local y, m, d, H, M, S = zulu:match( '(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)(%d%d)Z' )
+    y, m, d, H, M, S = tonumber(y), tonumber(m), tonumber(d),
+                       tonumber(H), tonumber(M), tonumber(S)
+
+    -- Build time table
+    local t = {year=y, month=m, day=d, hour=H, min=M, sec=S, isdst=false}
+
+    -- os.time interprets as local time, so adjust to UTC
+    local local_epoch = os.time(t)
+    local utc_correction = math.tointeger( os.difftime( local_epoch, os.time( os.date( '!*t', local_epoch ) ) ) )
+ 
+    return local_epoch + utc_correction
+
+end
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Main code
 --
 
@@ -723,6 +751,37 @@ do
         print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') .. red_off )
         print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
     
+        if ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil ) then
+
+            local start_epoch =   zulu_to_epoch( project_info['open_date'] )
+            local end_epoch =     zulu_to_epoch( project_info['end_date'] )
+            local current_epoch = os.time()
+
+            local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) ) 
+
+            print( red_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. red_off )
+
+        end
+        
+        if ( project_info['closed_date'] ~= nil ) then
+        
+            if project_info['is_open'] or (project_info['is_open'] == nil) then
+        
+	            local closed_epoch =  zulu_to_epoch( project_info['closed_date'] )
+	            local current_epoch = os.time()
+	            
+	            days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
+	            
+	            print( red_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. red_off )
+	            
+            else
+            
+                print( red_on .. '  - Data is no longer accessible as the project is closed' .. red_off ) 
+            
+            end
+        
+        end
+
     end
 
     if mode == 'lust' then
