@@ -1,8 +1,8 @@
-VERSION=1.2.0
-DATE="24 May 2024"
+VERSION=1.3.0
+DATE="19 November 2025"
 PREFIX=/user/local
 
-recommended : check-build-dirs select-workspaces-sh select-quota-sh select-check-quota-sh \
+recommended : check-build-dirs select-workspaces-lua select-quota-sh select-check-quota-sh \
               select-ldap-projectinfo-lua select-ldap-userinfo-lua \
               select-ldap-projectlist-lust-lua man-allocations-py
 	m4 -DVERSION=$(VERSION) -DDATE=$(DATE) man/man1/lumi-tools-recommended.1 >build/share/man/man1/lumi-tools.1
@@ -15,6 +15,10 @@ select-workspaces-sh : check-build-dirs
 	cp src/lumi-workspaces.sh build/bin/lumi-workspaces
 	m4 -DVERSION=$(VERSION) -DDATE=$(DATE) man/man1/lumi-workspaces-sh.1 >build/share/man/man1/lumi-workspaces.1
 	
+select-workspaces-lua : check-build-dirs
+	cp src/lumi-workspaces.lua build/bin/lumi-workspaces
+	m4 -DVERSION=$(VERSION) -DDATE=$(DATE) man/man1/lumi-workspaces-lua.1 >build/share/man/man1/lumi-workspaces.1
+
 select-quota-sh : check-build-dirs
 	cp src/lumi-quota.sh build/bin/lumi-quota
 	m4 -DVERSION=$(VERSION) -DDATE=$(DATE) man/man1/lumi-quota-sh.1 >build/share/man/man1/lumi-quota.1

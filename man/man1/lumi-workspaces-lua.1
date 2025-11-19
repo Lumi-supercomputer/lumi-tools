@@ -1,0 +1,23 @@
+.\" Developed by the LUMI User Support Team  for the LUMI consortium.
+.TH man 1 "DATE" "VERSION" "lumi-workspaces"
+
+.SH NAME
+\fBlumi-workspaces\fR \- Show quota and project allocations LUMI.
+
+.SH DESCRIPTION
+\fBlumi-workspaces\fR shows quota and allocations for the current user.
+The quota are obtained live from Lustre. Data about billing unit consumption is 
+computed periodically off-line so the values that are shown are those from the 
+last update at the system level and do not correspond with the current state.
+This is because the computation of the consumed billing units is too complex to
+do in Slurm.
+
+.SH OPTIONS
+
+The current version of \fBlumi-workspaces\fR does not take any command line options.
+
+.SH SEE ALSO
+lumi-quota(1), lumi-allocations(1)
+
+.SH AUTHOR
+Developed by the LUMI User Support Team for the LUMI consortium
