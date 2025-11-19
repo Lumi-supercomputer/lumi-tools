@@ -731,7 +731,7 @@ local user_info = json_decode( user_info_str )
 -- Print the header
 --
 
-print( '\nInformation for userid ' .. user .. ':\n\n' ) 
+print( '\nInformation for userid ' .. user .. ':\n' ) 
 
 --
 -- Get some general information
@@ -761,12 +761,10 @@ print( '- Storage information:' )
 
 local user_fs
 _, _, user_fs = string.find( user_info['home_fs'], '/pfs/(lustrep%d)/users' )
-print( '  - User hosted on ' .. ( user_fs or 'UNKNOWN' ) )
-
--- TODO: Get the real quota for the user directory.
+print( '  - Home directory hosted on ' .. ( user_fs or 'UNKNOWN' ) )
 
 -- Project directory
-local live = true
+local live_home = true
 local quota = {}
 quota['block_used'], quota['block_soft'], quota['block_hard'],
 quota['inode_used'], quota['inode_soft'], quota['inode_hard'] =
@@ -779,10 +777,10 @@ if ( quota['block_used'] == nil ) then
     quota['inode_used'] = user_info['home_quota']['inode_quota_used']
     quota['inode_soft'] = user_info['home_quota']['inode_quota_soft']
     quota['inode_hard'] = user_info['home_quota']['inode_quota_hard']
-    live = false
+    live_home = false
 end
 
-if live then
+if live_home then
     print( '  - Disk quota home directory (live from `lfs quota`):' )
 else
     print( '  - Disk quota home directory (cached info):' )
@@ -796,7 +794,7 @@ local inode_colour_on, inode_colour_off = colour_thresholds( inode_perc_used )
 print( '    - Block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
         '% used (' .. convert_to_iec( quota['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['block_soft'] * 1024, 5 ) .. 
         '/' .. convert_to_iec( quota['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-        ',\n' ..  
+        '\n' ..  
         '    - File quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
         '% used (' .. convert_to_si( quota['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['inode_soft'], 5 ) .. 
         '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
@@ -811,8 +809,8 @@ local project_list = get_projects_from_user( user )
 if project_list ~=  nil and #project_list > 0 then
     
     for _,project in ipairs( project_list ) do
-    
-        print( '\n--------------------------------------------------------------------------------\n' )
+ 
+        print( '\n--------------------------------------------------------------------------------------------------------\n' )
         print( 'Information for project ' .. project .. ' - ' .. get_project_title( project ) .. '\n' )
 
         --
@@ -901,56 +899,82 @@ if project_list ~=  nil and #project_list > 0 then
             end
 
             print( '- Storage information:' )
-            print( '  - Project hosted on ' .. ( project_fs or 'UNKNOWN' ) )
+            print( '  - Project and scratch directory hosted on ' .. ( project_fs or 'UNKNOWN' ) )
     
             --
             -- Check disk quotas
             --
 
-            local use_cached = true
+            local live_project = true
             local quota = {}
-            
-            local quota_cached = project_info['storage_quotas']['directories']
-            
-            -- Project directory
+
             quota['project'] = {}
-            quota['project']['has_dir'] = quota_cached ~= nil and quota_cached ['projappl'] ~=  nil
-            if quota['project']['has_dir'] then
-                quota['project']['block_used'] = quota_cached['projappl']['block_quota_used']
-                quota['project']['block_soft'] = quota_cached['projappl']['block_quota_soft']
-                quota['project']['block_hard'] = quota_cached['projappl']['block_quota_hard']
-                quota['project']['inode_used'] = quota_cached['projappl']['inode_quota_used']
-                quota['project']['inode_soft'] = quota_cached['projappl']['inode_quota_soft']
-                quota['project']['inode_hard'] = quota_cached['projappl']['inode_quota_hard']
-            end
-            
-            -- Scratch directory
+            quota['project']['block_used'], quota['project']['block_soft'], quota['project']['block_hard'],
+            quota['project']['inode_used'], quota['project']['inode_soft'], quota['project']['inode_hard'] =
+                get_quota( 'project', project )
+            quota['project']['has_dir'] = quota['project']['block_used'] ~=  nil
             quota['scratch'] = {}
-            quota['scratch']['has_dir'] = quota_cached ~= nil and quota_cached ['scratch'] ~=  nil
-            if quota['scratch']['has_dir'] then
-                quota['scratch']['block_used'] = quota_cached['scratch']['block_quota_used']
-                quota['scratch']['block_soft'] = quota_cached['scratch']['block_quota_soft']
-                quota['scratch']['block_hard'] = quota_cached['scratch']['block_quota_hard']
-                quota['scratch']['inode_used'] = quota_cached['scratch']['inode_quota_used']
-                quota['scratch']['inode_soft'] = quota_cached['scratch']['inode_quota_soft']
-                quota['scratch']['inode_hard'] = quota_cached['scratch']['inode_quota_hard']
-            end
-            
-            -- Flash directory
+            quota['scratch']['block_used'], quota['scratch']['block_soft'], quota['scratch']['block_hard'],
+            quota['scratch']['inode_used'], quota['scratch']['inode_soft'], quota['scratch']['inode_hard'] =
+                get_quota( 'scratch', project )
+            quota['scratch']['has_dir'] = quota['scratch']['block_used'] ~=  nil
             quota['flash'] = {}
-            quota['flash']['has_dir'] = true
-            quota['flash']['has_dir'] = quota_cached ~= nil and quota_cached ['flash'] ~=  nil
-            if quota['flash']['has_dir'] then
-                quota['flash']['block_used'] = quota_cached['flash']['block_quota_used']
-                quota['flash']['block_soft'] = quota_cached['flash']['block_quota_soft']
-                quota['flash']['block_hard'] = quota_cached['flash']['block_quota_hard']
-                quota['flash']['inode_used'] = quota_cached['flash']['inode_quota_used']
-                quota['flash']['inode_soft'] = quota_cached['flash']['inode_quota_soft']
-                quota['flash']['inode_hard'] = quota_cached['flash']['inode_quota_hard']
-            end
+            quota['flash']['block_used'], quota['flash']['block_soft'], quota['flash']['block_hard'],
+            quota['flash']['inode_used'], quota['flash']['inode_soft'], quota['flash']['inode_hard'] =
+                get_quota( 'flash', project )
+            quota['flash']['has_dir'] = quota['flash']['block_used'] ~=  nil
             
+            if ( quota['project']['block_used'] == nil ) or ( quota['scratch']['block_used'] == nil ) or
+               ( quota['flash']['block_used'] == nil ) then
+            
+                local quota_cached = project_info['storage_quotas']['directories']
+                
+                -- Project directory
+                quota['project'] = {}
+                quota['project']['has_dir'] = quota_cached ~= nil and quota_cached ['projappl'] ~=  nil
+                if quota['project']['has_dir'] then
+                    quota['project']['block_used'] = quota_cached['projappl']['block_quota_used']
+                    quota['project']['block_soft'] = quota_cached['projappl']['block_quota_soft']
+                    quota['project']['block_hard'] = quota_cached['projappl']['block_quota_hard']
+                    quota['project']['inode_used'] = quota_cached['projappl']['inode_quota_used']
+                    quota['project']['inode_soft'] = quota_cached['projappl']['inode_quota_soft']
+                    quota['project']['inode_hard'] = quota_cached['projappl']['inode_quota_hard']
+                end
+                
+                -- Scratch directory
+                quota['scratch'] = {}
+                quota['scratch']['has_dir'] = quota_cached ~= nil and quota_cached ['scratch'] ~=  nil
+                if quota['scratch']['has_dir'] then
+                    quota['scratch']['block_used'] = quota_cached['scratch']['block_quota_used']
+                    quota['scratch']['block_soft'] = quota_cached['scratch']['block_quota_soft']
+                    quota['scratch']['block_hard'] = quota_cached['scratch']['block_quota_hard']
+                    quota['scratch']['inode_used'] = quota_cached['scratch']['inode_quota_used']
+                    quota['scratch']['inode_soft'] = quota_cached['scratch']['inode_quota_soft']
+                    quota['scratch']['inode_hard'] = quota_cached['scratch']['inode_quota_hard']
+                end
+                
+                -- Flash directory
+                quota['flash'] = {}
+                quota['flash']['has_dir'] = true
+                quota['flash']['has_dir'] = quota_cached ~= nil and quota_cached ['flash'] ~=  nil
+                if quota['flash']['has_dir'] then
+                    quota['flash']['block_used'] = quota_cached['flash']['block_quota_used']
+                    quota['flash']['block_soft'] = quota_cached['flash']['block_quota_soft']
+                    quota['flash']['block_hard'] = quota_cached['flash']['block_quota_hard']
+                    quota['flash']['inode_used'] = quota_cached['flash']['inode_quota_used']
+                    quota['flash']['inode_soft'] = quota_cached['flash']['inode_quota_soft']
+                    quota['flash']['inode_hard'] = quota_cached['flash']['inode_quota_hard']
+                end 
+            
+                live_project = false
+
+            end
         
-            print( '  - Disk quota (cached info):' )
+            if live_project then
+                print( '  - Disk quota (live from `lfs quota`):' )
+            else
+                print( '  - Disk quota (cached info):' )
+            end
             
             local spacer = string.gsub( project, '.', ' ' )
         
@@ -964,7 +988,7 @@ if project_list ~=  nil and #project_list > 0 then
                     'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
                     '% used (' .. convert_to_iec( quota['project']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['project']['block_soft'] * 1024, 5 ) .. 
                     '/' .. convert_to_iec( quota['project']['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-                    ',\n                 ' .. spacer ..  
+                    '\n                 ' .. spacer ..  
                     'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
                     '% used (' .. convert_to_si( quota['project']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['project']['inode_soft'], 5 ) .. 
                     '  /' .. convert_to_si( quota['project']['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
@@ -980,7 +1004,7 @@ if project_list ~=  nil and #project_list > 0 then
                     'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
                     '% used (' .. convert_to_iec( quota['scratch']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['scratch']['block_soft'] * 1024, 5 ) .. 
                     '/' .. convert_to_iec( quota['scratch']['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-                    ',\n                 ' .. spacer ..  
+                    '\n                 ' .. spacer ..  
                     'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
                     '% used (' .. convert_to_si( quota['scratch']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['scratch']['inode_soft'], 5 ) .. 
                     '  /' .. convert_to_si( quota['scratch']['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
@@ -996,7 +1020,7 @@ if project_list ~=  nil and #project_list > 0 then
                     'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
                     '% used (' .. convert_to_iec( quota['flash']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['flash']['block_soft'] * 1024, 5 ) .. 
                     '/' .. convert_to_iec( quota['flash']['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-                    ',\n                 ' .. spacer ..  
+                    '\n                 ' .. spacer ..  
                     'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
                     '% used (' .. convert_to_si( quota['flash']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['flash']['inode_soft'], 5 ) .. 
                     '  /' .. convert_to_si( quota['flash']['inode_hard'], 7 ) .. '   soft/hard)' .. inode_colour_off )
@@ -1014,7 +1038,6 @@ if project_list ~=  nil and #project_list > 0 then
            project_info['billing']['qpu_secs']['alloc'] == 0 then
 
             print( '- The project has no allocation' )
-        
         
         else
             
@@ -1062,7 +1085,6 @@ if project_list ~=  nil and #project_list > 0 then
             end
         
         end -- else-part check if there is an allocation.
-        
 
     end -- for _,project in ipairs( project_list ) do
     
