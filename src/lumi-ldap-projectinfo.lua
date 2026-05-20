@@ -778,47 +778,39 @@ do
             -- LUST version time used
             print( red_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. red_off )
             -- USER version time used
-            if ( frac_time_used <= 95 ) then
-                print( blue_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. blue_off )
-            elseif ( frac_time_used == 100 ) then
-                print( blue_on .. '  - 100% of the project time has passed' .. blue_off )
-            else
-                print( blue_on .. '  - More than 95% of the project time has passed' .. blue_off )
-            end
+            print( blue_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. blue_off )
             if ( compute_days_left == 0 ) then
-                print( blue_on .. '    Compute can end any moment if not ended yet' .. blue_off )
+                print( blue_on .. '    Compute can end any moment if not ended yet (see also allocation information for that)' .. blue_off )
+            else
+                print( blue_on .. '    ' .. string.format( '%d', compute_days_left ) .. ' day(s) of compute left' .. blue_off )
             end
 
             -- LUST version data removal
             if project_info['is_open'] then
                 -- LUST version
-                print( red_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' days left until data removal' .. red_off )
+                print( red_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' .. red_off )
             else
                 print( red_on .. '  - Data is no longer accessible as the project is closed' .. red_off )    
             end
             -- USER version data removal (is_open is not present in that data)
             if ( data_days_left > 0 ) then
-                print( blue_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' days left until data removal' .. blue_off )
+                print( blue_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' .. blue_off )
             else
                 print( blue_on .. '  - Data access can be blocked any moment if not blocked already' .. blue_off )
             end
 
         else -- mode == user
 
-            if ( frac_time_used <= 95 ) then
-                print( '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' )
-            elseif ( frac_time_used == 100 ) then
-                print( '  - 100% of the project time has passed' )
-            else
-                print( '  - More than 95% of the project time has passed' )
-            end
+            print( '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' )
             if ( compute_days_left == 0 ) then
-                print( '    Compute can end any moment if not ended yet' )
+                print( '    Compute can end any moment if not ended yet (see also allocation information for that)' )
+            else
+                print( '    ' .. string.format( '%d', compute_days_left ) .. ' day(s) of compute left' )
             end
 
 
             if ( data_days_left > 0 ) then
-                print( '  - ' .. string.format( '%d', data_days_left ) .. ' days left until data removal' )
+                print( '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' )
             else
                 print( '  - Data access can be blocked any moment if not blocked already' )
             end
