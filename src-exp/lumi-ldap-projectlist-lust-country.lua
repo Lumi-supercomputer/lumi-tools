@@ -464,7 +464,9 @@ do
     country_table['lumi-training'] = 'LUMI training'
     country_table['lumi-lust'] = 'LUMI Support Team'
     country_table['lumi-lustt'] = 'LUMI Support Team Training'
+    country_table['efp-lumi-c'] = 'EFP project for LUMI-C'
+    country_table['efp-lumi-g'] = 'EFP project for LUMI-G'
 
-    print( project .. ' ' .. (country_table[project_info['allocator_country']] or 'UNKOWN') )
+    print( project .. ' ' .. (country_table[project_info['allocator_country']] or 'UNRECOGNISED - ' .. project_info['allocator_country']) )
 
 end
