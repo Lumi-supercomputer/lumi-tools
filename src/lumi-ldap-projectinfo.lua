@@ -766,7 +766,8 @@ do
         local user_closed_epoch = closed_epoch - (27 * 3600)
 
         local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) )
-        local days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
+        local compute_days_left = math.max( 0, math.floor( (end_epoch - current_epoch) / 86400 ) )
+        local data_days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
 
         if mode == 'lust' then
 
@@ -780,21 +781,24 @@ do
             if ( frac_time_used <= 95 ) then
                 print( blue_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. blue_off )
             elseif ( frac_time_used == 100 ) then
-                print( blue_on .. '  - 100% of the project time has passed, compute can end any moment if not ended yet' .. blue_off )
+                print( blue_on .. '  - 100% of the project time has passed' .. blue_off )
             else
                 print( blue_on .. '  - More than 95% of the project time has passed' .. blue_off )
+            end
+            if ( compute_days_left == 0 ) then
+                print( blue_on .. '    Compute can end any moment if not ended yet' .. blue_off )
             end
 
             -- LUST version data removal
             if project_info['is_open'] then
                 -- LUST version
-                print( red_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. red_off )
+                print( red_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' days left until data removal' .. red_off )
             else
                 print( red_on .. '  - Data is no longer accessible as the project is closed' .. red_off )    
             end
             -- USER version data removal (is_open is not present in that data)
-            if ( days_left > 0 ) then
-                print( blue_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. blue_off )
+            if ( data_days_left > 0 ) then
+                print( blue_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' days left until data removal' .. blue_off )
             else
                 print( blue_on .. '  - Data access can be blocked any moment if not blocked already' .. blue_off )
             end
@@ -804,13 +808,17 @@ do
             if ( frac_time_used <= 95 ) then
                 print( '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' )
             elseif ( frac_time_used == 100 ) then
-                print( '  - 100% of the project time has passed, compute can end any moment if not ended yet' )
+                print( '  - 100% of the project time has passed' )
             else
                 print( '  - More than 95% of the project time has passed' )
             end
+            if ( compute_days_left == 0 ) then
+                print( '    Compute can end any moment if not ended yet' )
+            end
 
-            if ( days_left > 0 ) then
-                print( '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' )
+
+            if ( data_days_left > 0 ) then
+                print( '  - ' .. string.format( '%d', data_days_left ) .. ' days left until data removal' )
             else
                 print( '  - Data access can be blocked any moment if not blocked already' )
             end
