@@ -359,7 +359,7 @@ function readablezulu( zulustring )
 
     return string.format( '%2d %s %4d %02d:%02d UTC', day, months[month], year, hour, min )
 
-end -- function printzulu
+end -- function readablezulu
 
 
 -- -----------------------------------------------------------------------------
@@ -484,7 +484,7 @@ end
 --
 -- Pretty dirty code at the moment that could be made a lot shorter with
 -- a loop and constant array, and the second part could be moved to a separate
--- function also as it is repeaded elsewhere.
+-- function also as it is repeated elsewhere.
 --
 -- -----------------------------------------------------------------------------
 
@@ -617,8 +617,10 @@ end
 -- Some constants etc. used in the script
 --
 
-local red_on  = '\27[31m'
-local red_off = '\27[0m'
+local red_on   = '\27[31m'
+local red_off  = '\27[0m'
+local blue_on  = '\27[34m'
+local blue_off = '\27[0m'
 
 -- -----------------------------------------------------------------------------
 --
@@ -745,52 +747,96 @@ do
     print( '- General information:' )
     print( '  - Title: ' .. (project_info['title'] or 'UNKNOWN') )
 
-    if mode == 'lust' then
+    --
+    -- Only report information on end and close date if all date fields are present
+    --
 
-        print( red_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') .. red_off )
-        print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') .. red_off )
-        print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
-    
-        if ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil ) then
+    if ( ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil ) and ( project_info['closed_date'] ~= nil ) ) then
 
-            local start_epoch =   zulu_to_epoch( project_info['open_date'] )
-            local end_epoch =     zulu_to_epoch( project_info['end_date'] )
-            local current_epoch = os.time()
+        local start_epoch =   zulu_to_epoch( project_info['open_date'] )
+        local end_epoch =     zulu_to_epoch( project_info['end_date'] )
+        local closed_epoch =  zulu_to_epoch( project_info['closed_date'] )
+        local current_epoch = os.time()
 
-            local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) ) 
+        local user_end_epoch =    end_epoch - (27 * 3600)
+        local user_closed_epoch = closed_epoch - (27 * 3600)
 
+        local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) )
+        local days_left = nil
+        if project_info['is_open'] then
+            days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
+        end
+
+        if mode == 'lust' then
+
+            print( red_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') .. red_off )
+            print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') .. red_off )
+            print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
+        
+            -- LUST version time used
             print( red_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. red_off )
-
-        end
-        
-        if ( project_info['closed_date'] ~= nil ) then
-        
-            if project_info['is_open'] or (project_info['is_open'] == nil) then
-        
-	            local closed_epoch =  zulu_to_epoch( project_info['closed_date'] )
-	            local current_epoch = os.time()
-	            
-	            days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
-	            
-	            print( red_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. red_off )
-	            
+            -- USER version time used
+            if ( frac_time_used <= 95 ) then
+                print( blue_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. blue_off )
+            elseif ( frac_time_used == 100 ) then
+                print( blue_on .. '  - 100% of the project time has passed, compute can end any moment if not ended yet' .. blue_off )
             else
-            
-                print( red_on .. '  - Data is no longer accessible as the project is closed' .. red_off ) 
-            
+                print( blue_on .. '  - More than 95% of the project time has passed' .. blue_off )
             end
-        
+
+            if project_info['is_open'] then
+                -- LUST version
+                print( red_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. red_off )
+                -- USER version
+                if ( days_left > 0 ) then
+                    print( blue_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. blue_off )
+                else
+                    print( blue_on .. '  - Data access can be blocked any moment' .. blue_off )
+                end
+            else
+                print( '  - Data is no longer accessible as the project is closed' )    
+            end
+
+        else -- mode == user
+
+            if ( frac_time_used <= 95 ) then
+                print( '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' )
+            elseif ( frac_time_used == 100 ) then
+                print( '  - 100% of the project time has passed, compute can end any moment if not ended yet' )
+            else
+                print( '  - More than 95% of the project time has passed' )
+            end
+
+            if project_info['is_open'] then
+                if ( days_left > 0 ) then
+                    print( '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' )
+                else
+                    print( '  - Data access can be blocked any moment' )
+                end
+            else
+                    print( '  - Data is no longer accessible as the project is closed' )    
+            end
+
         end
 
-    end
+    else -- Else-part reporting on start, end and close date - not all dates are known
+
+        if mode == 'lust' then
+            print( red_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] )   or 'UNKNOWN') .. red_off )
+            print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] )    or 'UNKNOWN') .. red_off )
+            print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
+        end
+
+    end -- Reporting on start, end and close date.
+
 
     if mode == 'lust' then
 
         if project_info['valid_compute_project']  ~=  nil then
             if project_info['valid_compute_project'] then
-                print( red_on .. '  - Project is valid for compute' .. red_off )
+                print( red_on .. '  - Project is valid for compute (field valid_compute_project true)' .. red_off )
             else
-                print( red_on .. '  - Project is not valid for compute' .. red_off )
+                print( red_on .. '  - Project is not valid for compute (field valid_compute_project false)' .. red_off )
             end
         end
         
@@ -825,8 +871,10 @@ do
         country_table['lumi-training'] = 'LUMI training'
         country_table['lumi-lust'] = 'LUMI Support Team'
         country_table['lumi-lustt'] = 'LUMI Support Team Training'
+        country_table['efp-lumi-c'] = 'EFP project for LUMI-C'
+        country_table['efp-lumi-g'] = 'EFP project for LUMI-G'
 
-        print( red_on .. '  - Allocator country: ' .. (country_table[project_info['allocator_country']] or 'UNKNOWN') .. red_off )
+        print( red_on .. '  - Allocator: ' .. (country_table[project_info['allocator_country']] or 'UNRECOGNISED ALLOCATOR') .. red_off )
 
     end
 
