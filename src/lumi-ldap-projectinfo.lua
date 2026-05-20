@@ -621,6 +621,8 @@ local red_on   = '\27[31m'
 local red_off  = '\27[0m'
 local blue_on  = '\27[34m'
 local blue_off = '\27[0m'
+local mag_on   = '\27[35m'
+local mag_off  = '\27[0m'
 
 -- -----------------------------------------------------------------------------
 --
@@ -639,6 +641,8 @@ end
 -- Process the command line arguments
 --
 
+if os.getenv( 'DEBUG') then debug = true end
+
 local argctr = 1
 local project_list = {}
 
@@ -656,7 +660,7 @@ do
                 table.insert( project_list, project )
             end
         end
-        if debug then io.stderr:write( 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' ) end
+        if debug then io.stderr:write( mag_on .. 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' .. mag_off ) end
     elseif ( arg[argctr] == '-u' or arg[argctr] == '--user' ) then
         argctr = argctr + 1
         local user_projects = get_projects_from_user( arg[argctr] )
@@ -672,7 +676,7 @@ do
                 table.insert( project_list, project )
             end
         end
-        if debug then io.stderr:write( 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' ) end        
+        if debug then io.stderr:write( mag_on .. 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' .. mag_off ) end        
     else
         io.stderr:write( 'Error: ' .. arg[argctr]  .. ' is an unrecognised argument.\n' )
         os.exit( 1 )
@@ -762,10 +766,7 @@ do
         local user_closed_epoch = closed_epoch - (27 * 3600)
 
         local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) )
-        local days_left = nil
-        if project_info['is_open'] then
-            days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
-        end
+        local days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
 
         if mode == 'lust' then
 
@@ -784,17 +785,18 @@ do
                 print( blue_on .. '  - More than 95% of the project time has passed' .. blue_off )
             end
 
+            -- LUST version data removal
             if project_info['is_open'] then
                 -- LUST version
                 print( red_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. red_off )
-                -- USER version
-                if ( days_left > 0 ) then
-                    print( blue_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. blue_off )
-                else
-                    print( blue_on .. '  - Data access can be blocked any moment' .. blue_off )
-                end
             else
-                print( '  - Data is no longer accessible as the project is closed' )    
+                print( red_on .. '  - Data is no longer accessible as the project is closed' .. red_off )    
+            end
+            -- USER version data removal (is_open is not present in that data)
+            if ( days_left > 0 ) then
+                print( blue_on .. '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' .. blue_off )
+            else
+                print( blue_on .. '  - Data access can be blocked any moment if not blocked already' .. blue_off )
             end
 
         else -- mode == user
@@ -807,14 +809,10 @@ do
                 print( '  - More than 95% of the project time has passed' )
             end
 
-            if project_info['is_open'] then
-                if ( days_left > 0 ) then
-                    print( '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' )
-                else
-                    print( '  - Data access can be blocked any moment' )
-                end
+            if ( days_left > 0 ) then
+                print( '  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' )
             else
-                    print( '  - Data is no longer accessible as the project is closed' )    
+                print( '  - Data access can be blocked any moment if not blocked already' )
             end
 
         end
@@ -1093,6 +1091,8 @@ do
     
     if mode == 'lust' then
         print( red_on .. '- Raw JSON data: `jq . /var/lib/project_info/lust/' .. project .. '/'.. project .. '.json`' .. red_off )
+    elseif debug then
+        print( mag_on .. '- Raw JSON data: `jq . /var/lib/project_info/users/' .. project .. '/'.. project .. '.json`' .. mag_off )
     end
 
     print( )
