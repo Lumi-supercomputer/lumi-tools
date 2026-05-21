@@ -857,43 +857,12 @@ if project_list ~=  nil and #project_list > 0 then
         -- General information of the project
         --
 
-        print( '- General project information:' )
+        -- print( '- General project information:' )
 
-        print( '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') )
-        print( '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') )
-        print( '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') )
+        -- print( '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') )
+        -- print( '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') )
+        -- print( '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') )
     
-        if ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil ) then
-
-            local start_epoch =   zulu_to_epoch( project_info['open_date'] )
-            local end_epoch =     zulu_to_epoch( project_info['end_date'] )
-            local current_epoch = os.time()
-
-            local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) ) 
-
-            print( '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' )
-
-        end -- if ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil )
-        
-        if ( project_info['closed_date'] ~= nil ) then
-        
-            if project_info['is_open'] or (project_info['is_open'] == nil) then
-        
-	            local closed_epoch =  zulu_to_epoch( project_info['closed_date'] )
-	            local current_epoch = os.time()
-	            
-	            days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
-	            
-	            print('  - ' .. string.format( '%d', days_left ) .. ' day(s) left until data removal' )
-	            
-            else
-            
-                print( '  - Data is no longer accessible as the project is closed' ) 
-            
-            end
-
-        end -- if ( project_info['closed_date'] ~= nil ) 
-
         --
         -- Storage information
         --
@@ -918,6 +887,34 @@ if project_list ~=  nil and #project_list > 0 then
 
             print( '- Storage information:' )
             print( '  - Project and scratch directory hosted on ' .. ( project_fs or 'UNKNOWN' ) )
+
+            --
+            -- Determine how much time is left for disk access
+            --
+            if ( project_info['closed_date'] ~= nil ) then
+
+                local closed_epoch =  zulu_to_epoch( project_info['closed_date'] )
+	            local current_epoch = os.time()
+	            
+	            local days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
+
+                local colour_on  = ''
+                local colour_off = ''
+                if ( days_left <= 5 ) then
+                    colour_on  = '\27[31m'
+                    colour_off = '\27[0m'
+                elseif ( days_left <= 15 ) then
+                    colour_on  = '\27[33m'
+                    colour_off = '\27[0m'
+                end
+	            
+                if days_left > 0 then
+	                print( colour_on .. '  - ' .. string.format( '%d', days_left ) .. ' day(s) left until data removal' .. colour_off )
+                else 
+                    print( colour_on .. '  - Data access can be closed any moment now' .. colour_off )
+                end
+
+            end -- ( project_info['closed_date'] ~= nil ) 
     
             --
             -- Check disk quotas
@@ -1060,6 +1057,31 @@ if project_list ~=  nil and #project_list > 0 then
         else
             
             print( '- State of the allocation (cached info):' )
+
+            if ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil ) then
+
+                local start_epoch =   zulu_to_epoch( project_info['open_date'] )
+                local end_epoch =     zulu_to_epoch( project_info['end_date'] )
+                local current_epoch = os.time()
+
+                local frac_time_used = math.max( 0, math.min( 100, (current_epoch - start_epoch) / (end_epoch - start_epoch) * 100 ) )
+
+                local colour_on  = ''
+                local colour_off = ''
+                if ( frac_time_used >=  95 ) then
+                    colour_on  = '\27[31m'
+                    colour_off = '\27[0m'
+                elseif ( frac_time_used >= 90 ) then
+                    colour_on  = '\27[33m'
+                    colour_off = '\27[0m'
+                end
+
+                print( colour_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. colour_off )
+                if ( frac_time_used == 100 ) then
+                    print( colour_on .. '    Compute access can be cut anuy moment' .. colour_off )
+                end
+
+            end -- if ( project_info['open_date'] ~= nil ) and ( project_info['end_date'] ~= nil )
 
             if project_info['billing']['cpu_hours']['alloc'] > 0 then
                 local alloc = project_info['billing']['cpu_hours']['alloc']
