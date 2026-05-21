@@ -617,12 +617,12 @@ end
 -- Some constants etc. used in the script
 --
 
-local red_on   = '\27[31m'
-local red_off  = '\27[0m'
-local blue_on  = '\27[34m'
-local blue_off = '\27[0m'
-local mag_on   = '\27[35m'
-local mag_off  = '\27[0m'
+local lustview_on  = '\27[31m'
+local lustview_off = '\27[0m'
+local userview_on  = '\27[34m'
+local userview_off = '\27[0m'
+local debug_on     = '\27[35m'
+local debug_off    = '\27[0m'
 
 -- -----------------------------------------------------------------------------
 --
@@ -660,7 +660,7 @@ do
                 table.insert( project_list, project )
             end
         end
-        if debug then io.stderr:write( mag_on .. 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' .. mag_off ) end
+        if debug then io.stderr:write( debug_on .. 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' .. debug_off ) end
     elseif ( arg[argctr] == '-u' or arg[argctr] == '--user' ) then
         argctr = argctr + 1
         local user_projects = get_projects_from_user( arg[argctr] )
@@ -676,7 +676,7 @@ do
                 table.insert( project_list, project )
             end
         end
-        if debug then io.stderr:write( mag_on .. 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' .. mag_off ) end        
+        if debug then io.stderr:write( debug_on .. 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' .. debug_off ) end        
     else
         io.stderr:write( 'Error: ' .. arg[argctr]  .. ' is an unrecognised argument.\n' )
         os.exit( 1 )
@@ -771,32 +771,32 @@ do
 
         if mode == 'lust' then
 
-            print( red_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') .. red_off )
-            print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') .. red_off )
-            print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
+            print( lustview_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] ) or 'UNKNOWN') .. lustview_off )
+            print( lustview_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] ) or 'UNKNOWN') .. lustview_off )
+            print( lustview_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. lustview_off )
         
             -- LUST version time used
-            print( red_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. red_off )
+            print( lustview_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. lustview_off )
             -- USER version time used
-            print( blue_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. blue_off )
+            print( userview_on .. '  - ' .. string.format( '%.0f', frac_time_used ) .. '% of the project time has passed' .. userview_off )
             if ( compute_days_left == 0 ) then
-                print( blue_on .. '    Compute can end any moment if not ended yet (see also allocation information for that)' .. blue_off )
+                print( userview_on .. '    Compute can end any moment if not ended yet (see also allocation information for that)' .. userview_off )
             else
-                print( blue_on .. '    ' .. string.format( '%d', compute_days_left ) .. ' day(s) of compute left' .. blue_off )
+                print( userview_on .. '    ' .. string.format( '%d', compute_days_left ) .. ' day(s) of compute left' .. userview_off )
             end
 
             -- LUST version data removal
             if project_info['is_open'] then
                 -- LUST version
-                print( red_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' .. red_off )
+                print( lustview_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' .. lustview_off )
             else
-                print( red_on .. '  - Data is no longer accessible as the project is closed' .. red_off )    
+                print( lustview_on .. '  - Data is no longer accessible as the project is closed' .. lustview_off )    
             end
             -- USER version data removal (is_open is not present in that data)
             if ( data_days_left > 0 ) then
-                print( blue_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' .. blue_off )
+                print( userview_on .. '  - ' .. string.format( '%d', data_days_left ) .. ' day(s) left until data removal' .. userview_off )
             else
-                print( blue_on .. '  - Data access can be blocked any moment if not blocked already' .. blue_off )
+                print( userview_on .. '  - Data access can be blocked any moment if not blocked already' .. userview_off )
             end
 
         else -- mode == user
@@ -820,9 +820,9 @@ do
     else -- Else-part reporting on start, end and close date - not all dates are known
 
         if mode == 'lust' then
-            print( red_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] )   or 'UNKNOWN') .. red_off )
-            print( red_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] )    or 'UNKNOWN') .. red_off )
-            print( red_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. red_off )
+            print( lustview_on .. '  - Project opened on :   ' .. (readablezulu( project_info['open_date'] )   or 'UNKNOWN') .. lustview_off )
+            print( lustview_on .. '  - Compute ends on :     ' .. (readablezulu( project_info['end_date'] )    or 'UNKNOWN') .. lustview_off )
+            print( lustview_on .. '  - Data access ends on : ' .. (readablezulu( project_info['closed_date'] ) or 'UNKNOWN') .. lustview_off )
         end
 
     end -- Reporting on start, end and close date.
@@ -832,18 +832,18 @@ do
 
         if project_info['valid_compute_project']  ~=  nil then
             if project_info['valid_compute_project'] then
-                print( red_on .. '  - Project is valid for compute (field valid_compute_project true)' .. red_off )
+                print( lustview_on .. '  - Project is valid for compute (field valid_compute_project true)' .. lustview_off )
             else
-                print( red_on .. '  - Project is not valid for compute (field valid_compute_project false)' .. red_off )
+                print( lustview_on .. '  - Project is not valid for compute (field valid_compute_project false)' .. lustview_off )
             end
         end
         
         
         if project_info['is_open']  ~=  nil then
             if project_info['is_open'] then
-                print( red_on .. '  - Project is open (field is_open true)' .. red_off )
+                print( lustview_on .. '  - Project is open (field is_open true)' .. lustview_off )
             else
-                print( red_on .. '  - Project is closed (field is_open false)' .. red_off )
+                print( lustview_on .. '  - Project is closed (field is_open false)' .. lustview_off )
             end
         end
 
@@ -872,7 +872,7 @@ do
         country_table['efp-lumi-c'] = 'EFP project for LUMI-C'
         country_table['efp-lumi-g'] = 'EFP project for LUMI-G'
 
-        print( red_on .. '  - Allocator: ' .. (country_table[project_info['allocator_country']] or 'UNRECOGNISED ALLOCATOR') .. red_off )
+        print( lustview_on .. '  - Allocator: ' .. (country_table[project_info['allocator_country']] or 'UNRECOGNISED ALLOCATOR') .. lustview_off )
 
     end
 
@@ -1090,11 +1090,21 @@ do
     -- 
     
     if mode == 'lust' then
-        print( red_on .. '- Raw JSON data: `jq . /var/lib/project_info/lust/' .. project .. '/'.. project .. '.json`' .. red_off )
+        print( lustview_on .. '- Raw JSON data: `jq . /var/lib/project_info/lust/' .. project .. '/'.. project .. '.json`' .. lustview_off )
     elseif debug then
-        print( mag_on .. '- Raw JSON data: `jq . /var/lib/project_info/users/' .. project .. '/'.. project .. '.json`' .. mag_off )
+        print( debug_on .. '- Raw JSON data: `jq . /var/lib/project_info/users/' .. project .. '/'.. project .. '.json`' .. debug_off )
     end
 
     print( )
+
+end
+
+if mode == 'lust' then
+
+    print( 'Colour coding:' )
+    print(                '- Same information for LUST and user' )
+    print( lustview_on .. '- View for LUST only' .. lustview_off )
+    print( userview_on .. '- View for user only' .. userview_off )
+    print( debug_on    .. '- Debug information\n'  .. debug_off )
 
 end
