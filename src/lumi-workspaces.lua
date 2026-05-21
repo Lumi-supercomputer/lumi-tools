@@ -1,6 +1,10 @@
 #! /usr/bin/env lua
 
 local debug = false
+if os.getenv( 'DEBUG') then debug = true end
+
+debug_on  = '\27[35m'
+debug_off = '\27[0m'
 
 local lfs = require('lfs')
 
@@ -661,6 +665,9 @@ function get_quota( type, name, id )
     handle:close()
 
     if string.find( lfsquota, 'errors happened' ) then
+        if debug then
+            print( debug_on .. type .. ' quota for ' .. project .. ': Failed to determine' .. debug_off )
+        end
         return nil, nil, nil, nil, nil, nil
     end
 
@@ -668,9 +675,20 @@ function get_quota( type, name, id )
     for w in string.gmatch( lfsquota, '%S+' ) do
         table.insert( values, w )
     end
+
+    if debug then
+        print( debug_on .. type .. ' quota for ' .. name .. ':' )
+        print( (values[2] or 'NIL') .. '  ' .. (values[3] or 'NIL') .. '  ' .. (values[4] or 'NIL') )
+        print( (values[6] or 'NIL') .. '  ' .. (values[7] or 'NIL') .. '  ' .. (values[8] or 'NIL') )
+        print( 'Returning:' )
+        print( (tonumber( values[2]:match('%d+') ) or 'NIL') .. '  ' .. (tonumber( values[3]:match('%d+') ) or 'NIL') .. '  ' .. (tonumber( values[4]:match('%d+') ) or 'NIL') )
+        print( (tonumber( values[6]:match('%d+') ) or 'NIL') .. '  ' .. (tonumber( values[7]:match('%d+') ) or 'NIL') .. '  ' .. (tonumber( values[8]:match('%d+') ) or 'NIL') .. '  ' .. debug_off )
+    end -- if debug
     
-    return tonumber( values[2] ), tonumber( values[3] ), tonumber( values[4] ), 
-           tonumber( values[6] ), tonumber( values[7] ), tonumber( values[8] )
+    -- When the quota is almost reach, numbers are sometimes marked with a * and we need to\
+    -- remove that or tonumber returns NIL.
+    return tonumber( values[2]:match('%d+') ), tonumber( values[3]:match('%d+') ), tonumber( values[4]:match('%d+') ), 
+           tonumber( values[6]:match('%d+') ), tonumber( values[7]:match('%d+') ), tonumber( values[8]:match('%d+') )
 
 end -- function get_quota
 
@@ -866,7 +884,7 @@ if project_list ~=  nil and #project_list > 0 then
 	            
 	            days_left = math.max( 0, math.floor( (closed_epoch - current_epoch) / 86400 ) )
 	            
-	            print('  - ' .. string.format( '%d', days_left ) .. ' days left until data removal' )
+	            print('  - ' .. string.format( '%d', days_left ) .. ' day(s) left until data removal' )
 	            
             else
             
