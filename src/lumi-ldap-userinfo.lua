@@ -688,7 +688,7 @@ do
 	    if user_info['valid_compute_user'] then
 	        print( '  - User is a valid compute user (field valid_compute_user true)' )
 	    else
-	        print( '  - User is a valid compute user (field valid_compute_user false)' )
+	        print( '  - User is not a valid compute user (field valid_compute_user false)' )
 	    end
     end
     
