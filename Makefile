@@ -1,4 +1,4 @@
-VERSION=2.0.0
+VERSION=26.05
 DATE="26 May 2026"
 PREFIX=/user/local
 
