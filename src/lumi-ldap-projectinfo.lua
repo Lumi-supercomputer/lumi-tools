@@ -830,6 +830,14 @@ do
 
     if mode == 'lust' then
 
+        if project_info['is_softclosed'] ~= nil then
+            if project_info['is_softclosed'] then
+                print( lustview_on .. '  - Project is in soft_closed state, which may point to issues with the account of the PI.' .. lustview_off )
+            else
+                print( lustview_on .. '  - Project is not in soft_closed state (is_softclosed is false)' .. lustview_off )
+            end
+        end
+
         if project_info['valid_compute_project']  ~=  nil then
             if project_info['valid_compute_project'] then
                 print( lustview_on .. '  - Project is valid for compute (field valid_compute_project true)' .. lustview_off )
@@ -1007,7 +1015,33 @@ do
        project_info['billing']['qpu_secs']['alloc'] == 0 then
 
         print( '- The project has no allocation' )
-       
+
+        if project_info['billing']['cpu_hours']['remaining'] < 0 or
+           project_info['billing']['gpu_hours']['remaining'] < 0 or
+           project_info['billing']['storage_hours']['remaining'] < 0 or
+           project_info['billing']['qpu_secs']['remaining'] < 0 then
+
+            -- We have information about use of billing units so far, so lets print that information.
+
+            print( '  Used resources:' )
+
+            if project_info['billing']['cpu_hours']['remaining'] < 0 then
+                print('  - CPU Khours:      ' .. string.format( '%.3f', -project_info['billing']['cpu_hours']['remaining'] / 1000 ) )
+            end
+            
+            if project_info['billing']['gpu_hours']['remaining'] < 0 then
+                print('  - GPU hours:       ' .. string.format( '%d', -project_info['billing']['gpu_hours']['remaining'] ) )
+            end
+            
+            if project_info['billing']['storage_hours']['remaining'] < 0 then
+                print('  - Storage TBhours: ' .. string.format( '%d', -project_info['billing']['storage_hours']['remaining'] ) )
+            end
+            
+            if project_info['billing']['qpu_secs']['remaining'] < 0 then
+                print('  - QPU seconds:     ' .. string.format( '%d', -project_info['billing']['qpu_secs']['remaining'] ) )
+            end
+            
+        end
        
     else
         
@@ -1105,6 +1139,9 @@ if mode == 'lust' then
     print(                '- Same information for LUST and user' )
     print( lustview_on .. '- View for LUST only' .. lustview_off )
     print( userview_on .. '- View for user only' .. userview_off )
-    print( debug_on    .. '- Debug information\n'  .. debug_off )
-
+    if debug then
+        print( debug_on    .. '- Debug information'  .. debug_off )
+    end
+    print()
+    
 end
